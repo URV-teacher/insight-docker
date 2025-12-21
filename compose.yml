@@ -1,0 +1,17 @@
+services:
+  insight:
+    build: .
+    image: nds-arm-insight:latest
+    container_name: insight-debugger
+    network_mode: host
+    environment:
+      - DISPLAY=${DISPLAY}
+      - XAUTHORITY=/tmp/.docker.xauth
+    volumes:
+      # Map the project code you want to debug here
+      - .:/project
+      # X11 Socket
+      - /tmp/.X11-unix:/tmp/.X11-unix
+      # X11 Authority (for permissions)
+      - /tmp/.docker.xauth:/tmp/.docker.xauth
+    working_dir: /project

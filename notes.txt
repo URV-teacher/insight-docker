@@ -1,0 +1,29 @@
+1) compilar l'insight
+2) empaquetar-lo
+3) que sigui útil per a "eso"
+3bis) que pugui ser útil per a la resta
+4) veure si es pot fer el mateix amb el nemiver, i llençar tot això
+
+
+    sudo apt install autoconf automake autogen tk-dev tcl-dev libgmp-dev libmpfr-dev texinfo bison flex
+    git clone --depth 1 git://sourceware.org/git/insight.git --recursive
+    cd insight
+    autoconf
+    autoupdate
+    # igual que la de les instruccions però sense python, que em peta
+    # peta la instal.lació si no és com a root. ara ho veig que la culpa és del
+    #   paràmetre --libdir i encara n'hi ha més que usen /usr. mirar-ho un
+    #   altre dia i pensar si deixar-ho tot a /usr/lib/insight/{bin,share,lib, etc.}
+    ./configure --prefix=/tmp/insight/. --libdir=/usr/lib64 --disable-binutils --disable-elfcpp --disable-gas --disable-gold --disable-gprof --disable-ld --disable-rpath --disable-zlib --enable-sim --with-gdb-datadir=/usr/share/insight --with-jit-reader-dir=/usr/lib64/insight --with-separate-debug-dir='/usr/lib/debug' --with-expat --without-libunwind --without-isl --without-python
+    make
+
+    finalment:
+    sudo apt install itcl3 itk3 iwidgets4
+    ./bundle/gdb/insight
+
+
+
+
+
+	@$(DESMUME)/DeSmuME_dev.exe --arm9gdb=1000 $(TARGET).nds &
+	@$(DEVKITPRO)/insight/bin/arm-eabi-insight $(TARGET).elf &
