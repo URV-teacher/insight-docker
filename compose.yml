@@ -1,8 +1,9 @@
 services:
   insight:
+    pull_policy: always
     build: .
     image: nds-arm-insight:latest
-    container_name: insight-debugger
+    container_name: insight
     network_mode: host
     environment:
       - DISPLAY=${DISPLAY}
