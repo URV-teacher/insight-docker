@@ -49,6 +49,8 @@ cleanup() {
 trap cleanup EXIT
 
 # -------------------- Resolve binaries --------------------
+INSIGHT_BIN=insight
+
 require_bin "${INSIGHT_BIN}"
 
 # -------------------- Validate inputs --------------------
@@ -134,7 +136,6 @@ else
 fi
 
 # -------------------- Build command with precedence --------------------
-INSIGHT_BIN=insight
 cmd=( "${INSIGHT_BIN}" )
 
 # 2) Add ROM if we auto-selected one (if user did not provide one, we don't add)
