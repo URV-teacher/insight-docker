@@ -6,7 +6,12 @@ services:
     network_mode: host
     environment:
       - DISPLAY=${DISPLAY}
-      - XAUTHORITY=/tmp/.docker.xauth
+      - MODE=host
+      - XVFB_DISPLAY=:99
+      - GEOMETRY=1024x768x24
+      - VNC_PORT=5900
+      #- ROM=/roms/rom.elf  # To supply the ELF ROM to load. If not, the first .elf file found in /roms will be executed
+      #- VNC_PASSWORD=secret
     volumes:
       # Map the project code you want to debug here
       - .:/project

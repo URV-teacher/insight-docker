@@ -6,8 +6,18 @@ ENV DEBIAN_FRONTEND=noninteractive
 
 # Install build dependencies
 RUN apt-get update && apt-get install -y \
-    autoconf automake autogen tk-dev tcl-dev libgmp-dev \
-    libmpfr-dev texinfo bison flex git build-essential \
+    autoconf \
+    automake \
+    autogen \
+    tk-dev \
+    tcl-dev \
+    libgmp-dev \
+    libmpfr-dev \
+    texinfo \
+    bison \
+    flex \
+    git \
+    build-essential \
     && rm -rf /var/lib/apt/lists/*
 
 # Clone and build Insight
@@ -54,6 +64,8 @@ RUN apt-get update && apt-get install -y \
     libgmp10 \
     libmpfr6 \
     libexpat1 \
+    x11vnc \
+    xvfb \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy the compiled binaries and data from the builder stage
@@ -61,8 +73,25 @@ COPY --from=builder /usr/local /usr/local
 COPY --from=builder /usr/lib64 /usr/lib64
 COPY --from=builder /usr/share/insight /usr/share/insight
 
+RUN export uid=1000 gid=1000 username=insight && \
+    mkdir -p /home/${username} && \
+    mkdir -p /etc/sudoers.d/ && \
+    echo "${username}:x:${uid}:${gid}:${username},,,:/home/${username}:/bin/bash" >> /etc/passwd && \
+    echo "${username}:x:${uid}:" >> /etc/group && \
+    echo "${username} ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/${username} && \
+    chmod 0440 /etc/sudoers.d/${username} && \
+    chown ${uid}:${gid} -R /home/${username}
+
+# Change to use custom entrypoint
+COPY entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+
+USER insight
+ENV HOME /home/insight
+
 # Set environment variable for the display
 ENV DISPLAY=:0
 
 # Start insight by default
 ENTRYPOINT ["insight"]
+CMD []
