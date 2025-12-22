@@ -93,5 +93,5 @@ ENV HOME /home/insight
 ENV DISPLAY=:0
 
 # Start insight by default
-ENTRYPOINT ["insight"]
+ENTRYPOINT ["/entrypoint.sh"]
 CMD []

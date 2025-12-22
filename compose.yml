@@ -15,9 +15,9 @@ services:
       #- VNC_PASSWORD=secret
     volumes:
       # Map the project code you want to debug here
-      - .:/project
+      - .:/roms
       # X11 Socket
       - /tmp/.X11-unix:/tmp/.X11-unix
       # X11 Authority (for permissions)
       - /tmp/.docker.xauth:/tmp/.docker.xauth
-    working_dir: /project
+    working_dir: /roms
