@@ -2,7 +2,7 @@ services:
   insight:
     pull_policy: always
     build: .
-    image: nds-arm-insight:latest
+    image: aleixmt/insight:latest
     container_name: insight
     network_mode: host
     environment:
