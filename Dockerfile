@@ -1,5 +1,5 @@
 # STAGE 1: Build
-FROM ubuntu:22.04 AS builder
+FROM ubuntu:24.04 AS builder
 
 # Prevent interactive prompts during apt install
 ENV DEBIAN_FRONTEND=noninteractive
@@ -52,7 +52,7 @@ RUN make -j$(nproc)
 RUN make install
 
 # STAGE 2: Runtime
-FROM ubuntu:22.04
+FROM ubuntu:24.04
 
 ENV DEBIAN_FRONTEND=noninteractive
 
@@ -66,6 +66,7 @@ RUN apt-get update && apt-get install -y \
     libexpat1 \
     x11vnc \
     xvfb \
+    expect \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy the compiled binaries and data from the builder stage
