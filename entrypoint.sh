@@ -116,7 +116,7 @@ user_rom=$ROM
 
 nds_rom=""
 if [[ -n "${user_rom}" ]]; then
-  nds_rom=""  # User will supply it via args; don't auto-append
+  nds_rom="${user_rom}"  # User will supply it via args; don't auto-append
 else
   preferred_rom="/roms/rom.elf"
   search_dir="/roms"
@@ -126,7 +126,7 @@ else
   else
     mapfile -t elf_files < <(find "${search_dir}" -maxdepth 1 -type f -name '*.elf' | sort)
     if (( ${#elf_files[@]} == 0 )); then
-      die "No .nds files found in ${search_dir}. You can also pass a ROM path as a positional argument."
+      die "No .elf files found in ${search_dir}. You can also pass a ROM path as a positional argument."
     fi
     nds_rom=""
     log "Not passing any ROM"
