@@ -20,6 +20,7 @@ RUN apt-get update && apt-get install -y \
     build-essential \
     && rm -rf /var/lib/apt/lists/*
 
+
 # Clone and build Insight
 WORKDIR /src
 RUN git clone --depth 1 git://sourceware.org/git/insight.git --recursive
@@ -30,8 +31,8 @@ RUN autoconf && autoupdate
 # Using the configuration provided in your snippet
 RUN ./configure \
     --prefix=/usr/local \
-    --target=arm-eabi \
     --libdir=/usr/lib64 \
+    --enable-sim \
     --with-gdb-datadir=/usr/share/insight \
     --with-jit-reader-dir=/usr/lib64/insight \
     --with-separate-debug-dir='/usr/lib/debug'
@@ -76,7 +77,7 @@ COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 
 USER insight
-ENV HOME /home/insight
+ENV HOME=/home/insight
 
 # Set environment variable for the display
 ENV DISPLAY=:0
