@@ -30,23 +30,11 @@ RUN autoconf && autoupdate
 # Using the configuration provided in your snippet
 RUN ./configure \
     --prefix=/usr/local \
+    --target=arm-eabi \
     --libdir=/usr/lib64 \
-    --disable-binutils \
-    --disable-elfcpp \
-    --disable-gas \
-    --disable-gold \
-    --disable-gprof \
-    --disable-ld \
-    --disable-rpath \
-    --disable-zlib \
-    --enable-sim \
     --with-gdb-datadir=/usr/share/insight \
     --with-jit-reader-dir=/usr/lib64/insight \
-    --with-separate-debug-dir='/usr/lib/debug' \
-    --with-expat \
-    --without-libunwind \
-    --without-isl \
-    --without-python
+    --with-separate-debug-dir='/usr/lib/debug'
 
 RUN make -j$(nproc)
 RUN make install
