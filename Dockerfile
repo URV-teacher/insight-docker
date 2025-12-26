@@ -32,10 +32,22 @@ RUN autoconf && autoupdate
 RUN ./configure \
     --prefix=/usr/local \
     --libdir=/usr/lib64 \
+    --disable-binutils \
+    --disable-elfcpp \
+    --disable-gold \
+    --disable-gprof \
+    --disable-ld \
+    --disable-rpath \
+    --disable-zlib \
     --enable-sim \
     --with-gdb-datadir=/usr/share/insight \
     --with-jit-reader-dir=/usr/lib64/insight \
-    --with-separate-debug-dir='/usr/lib/debug'
+    --with-separate-debug-dir='/usr/lib/debug' \
+    --with-expat \
+    --without-libunwind \
+    --without-isl \
+    --without-python
+
 
 RUN make -j$(nproc)
 RUN make install
