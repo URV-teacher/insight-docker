@@ -11,6 +11,7 @@ services:
       - XVFB_DISPLAY=:99
       - GEOMETRY=1024x768x24
       - VNC_PORT=5900
+      - ROM=/roms/rom.elf
       #- ROM=/roms/rom.elf  # To supply the ELF ROM to load. If not, the first .elf file found in /roms will be executed
       #- VNC_PASSWORD=secret
     volumes:
