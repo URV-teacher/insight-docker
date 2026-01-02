@@ -114,7 +114,7 @@ esac
 # -------------------- ROM selection with precedence --------------------
 user_args=( "$@" )
 
-user_rom=$ROM
+user_rom=${ROM:=}
 
 nds_rom=""
 if [[ -n "${user_rom}" ]]; then
