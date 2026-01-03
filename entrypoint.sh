@@ -16,7 +16,7 @@ export GEOMETRY="${VNC_GEOMETRY}"
 : "${VNC_LISTEN:=0.0.0.0}"
 : "${VNC_PASSWORD:=}"                 # optional; empty => no auth
 
-: "${INSIGHT_GDB_PORT:=1000}"
+: "${INSIGHT_GDB_PORT:=1024}"
 
 
 PATTERN="Did your main() return"   # substring to detect
@@ -120,8 +120,8 @@ nds_rom=""
 if [[ -n "${user_rom}" ]]; then
   nds_rom="${user_rom}"  # User will supply it via args; don't auto-append
 else
-  preferred_rom="/roms/rom.elf"
-  search_dir="/roms"
+  preferred_rom="/input/rom.elf"
+  search_dir="/input"
   if [[ -f "${preferred_rom}" ]]; then
     nds_rom="${preferred_rom}"
     log "Using preferred ROM: ${preferred_rom}"
