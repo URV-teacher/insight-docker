@@ -1,24 +1,35 @@
+# Debugs the ELF of the project in the current directory, built with bmde build, with DeSmuME (desmume-docker)
+# running in the Docker network bmde-debug with name desmume and --arm9gdb=1024 (as bmde debug does)
 services:
   insight:
     pull_policy: always
     build: .
     image: aleixmt/insight:latest
     container_name: insight
-    network_mode: host
+    networks:
+      - bmde-debug
     environment:
       - DISPLAY=${DISPLAY}
+      - XAUTHORITY=/tmp/.docker.xauth
       - MODE=host
-      - XVFB_DISPLAY=:99
-      - GEOMETRY=1024x768x24
-      - VNC_PORT=5900
-      - ROM=/roms/rom.elf
-      #- ROM=/roms/rom.elf  # To supply the ELF ROM to load. If not, the first .elf file found in /roms will be executed
-      #- VNC_PASSWORD=secret
+      - DEBUGGER=insight          # or arm-eabi-gdb, gdb-multiarch
+      - GDB_TARGET=desmume:1024
     volumes:
-      # Map the project code you want to debug here
-      - .:/roms
-      # X11 Socket
+      # Project to debug, in the same path where bmde build builds it (/input/<project folder>), so the debugger finds
+      # the sources. Set PROJECT to the name of the project folder
+      - .:/input/${PROJECT:-project}:ro
+      # X11 socket and cookie of the host
       - /tmp/.X11-unix:/tmp/.X11-unix
-      # X11 Authority (for permissions)
-      - /tmp/.docker.xauth:/tmp/.docker.xauth
-    working_dir: /roms
+      - ${XAUTHORITY}:/tmp/.docker.xauth:ro
+      # Preferences, sessions and breakpoints of Insight
+      - insight_config:/home/insight
+    working_dir: /input/${PROJECT:-project}
+    stdin_open: true
+    tty: true
+
+networks:
+  bmde-debug:
+    external: true
+
+volumes:
+  insight_config:

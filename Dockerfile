@@ -1,99 +1,80 @@
 # STAGE 1: Build
-FROM ubuntu:24.04 AS builder
+# Insight 7.3.50.20110803-cvs, the version shipped with the Windows BMDE (devkitPro's arm-eabi-insight), built from
+# its original sources (see scripts/fetch_source.sh). Ubuntu 14.04 provides a toolchain of the same era, so the 2011
+# code (GDB, Tcl/Tk 8.4, itcl 3.3) builds without patches.
+FROM ubuntu:14.04 AS builder
 
-# Prevent interactive prompts during apt install
 ENV DEBIAN_FRONTEND=noninteractive
 
-# Install build dependencies
-RUN apt-get update && apt-get install -y \
-    autoconf \
-    automake \
-    autogen \
-    tk-dev \
-    tcl-dev \
-    libgmp-dev \
-    libmpfr-dev \
-    texinfo \
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
     bison \
     flex \
-    git \
-    build-essential \
+    m4 \
+    texinfo \
+    libncurses5-dev \
+    libexpat1-dev \
+    zlib1g-dev \
+    libx11-dev \
+    xz-utils \
     && rm -rf /var/lib/apt/lists/*
 
-
-# Clone and build Insight
+COPY src/insight-7.3.50.20110803-cvs.tar.xz /src/
 WORKDIR /src
-RUN git clone --depth 1 git://sourceware.org/git/insight.git --recursive
+RUN tar -xJf insight-7.3.50.20110803-cvs.tar.xz && mkdir build
 
-WORKDIR /src/insight
-RUN autoconf && autoupdate
+# Same target as the Windows build (arm-eabi-insight, arm-eabi-gdb, arm-eabi-run). Docs are skipped (MAKEINFO=true)
+# because the texinfo of this toolchain is newer than the one of the sources
+WORKDIR /src/build
+RUN ../insight-7.3.50.20110803-cvs/configure \
+      --prefix=/opt/insight \
+      --target=arm-eabi \
+      --disable-werror \
+      --disable-nls \
+      --with-expat \
+      --without-python \
+    && make -j"$(nproc)" MAKEINFO=true \
+    && make install MAKEINFO=true \
+    && strip --strip-unneeded /opt/insight/bin/*
 
-# Using the configuration provided in your snippet
-RUN ./configure \
-    --prefix=/usr/local \
-    --libdir=/usr/lib64 \
-    --disable-binutils \
-    --disable-elfcpp \
-    --disable-gold \
-    --disable-gprof \
-    --disable-ld \
-    --disable-rpath \
-    --disable-zlib \
-    --enable-sim \
-    --with-gdb-datadir=/usr/share/insight \
-    --with-jit-reader-dir=/usr/lib64/insight \
-    --with-separate-debug-dir='/usr/lib/debug' \
-    --with-expat \
-    --without-libunwind \
-    --without-isl \
-    --without-python
-
-
-RUN make -j$(nproc)
-RUN make install
 
 # STAGE 2: Runtime
-FROM ubuntu:24.04
+FROM ubuntu:22.04
 
 ENV DEBIAN_FRONTEND=noninteractive
 
-# Install runtime dependencies (Tcl/Tk, itcl, itk, etc.)
-RUN apt-get update && apt-get install -y \
-    itcl3 \
-    itk3 \
-    iwidgets4 \
-    libgmp10 \
-    libmpfr6 \
+# Runtime libraries of Insight, gdb-multiarch as alternative debugger, and X11 / VNC utilities
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libx11-6 \
+    libncurses5 \
+    libtinfo5 \
+    zlib1g \
     libexpat1 \
+    gdb-multiarch \
     x11vnc \
     xvfb \
-    expect \
+    xfonts-base \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy the compiled binaries and data from the builder stage
-COPY --from=builder /usr/local /usr/local
-COPY --from=builder /usr/lib64 /usr/lib64
-COPY --from=builder /usr/share/insight /usr/share/insight
+COPY --from=builder /opt/insight /opt/insight
+# Not symlinked: Tcl finds its library relative to the path of the executable
+ENV PATH="/opt/insight/bin:${PATH}"
+RUN printf '#!/bin/sh\nexec /opt/insight/bin/arm-eabi-insight "$@"\n' > /usr/local/bin/insight \
+    && chmod +x /usr/local/bin/insight
 
-RUN export uid=1000 gid=1000 username=insight && \
-    mkdir -p /home/${username} && \
-    mkdir -p /etc/sudoers.d/ && \
-    echo "${username}:x:${uid}:${gid}:${username},,,:/home/${username}:/bin/bash" >> /etc/passwd && \
-    echo "${username}:x:${uid}:" >> /etc/group && \
-    echo "${username} ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/${username} && \
-    chmod 0440 /etc/sudoers.d/${username} && \
-    chown ${uid}:${gid} -R /home/${username}
-
-# Change to use custom entrypoint
+COPY tcl/connect.tcl /opt/insight-docker/connect.tcl
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 
+RUN export uid=1000 gid=1000 username=insight && \
+    mkdir -p /home/${username} /input && \
+    echo "${username}:x:${uid}:${gid}:${username},,,:/home/${username}:/bin/bash" >> /etc/passwd && \
+    echo "${username}:x:${uid}:" >> /etc/group && \
+    chown ${uid}:${gid} -R /home/${username}
+
 USER insight
 ENV HOME=/home/insight
+WORKDIR /input
 
-# Set environment variable for the display
-ENV DISPLAY=:0
-
-# Start insight by default
 ENTRYPOINT ["/entrypoint.sh"]
 CMD []
