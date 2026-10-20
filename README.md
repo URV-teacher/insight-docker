@@ -11,9 +11,9 @@ The image contains the same Insight shipped with the Windows BMDE (`devkitPro/in
 
 That version was built by devkitPro from a checkout of the CVS repository of sourceware.org (it was never released as a
 tarball). [`scripts/fetch_source.sh`](scripts/fetch_source.sh) reconstructs that checkout from the CVS repository, which
-sourceware.org still serves through rsync, and packs it into
-[`src/insight-7.3.50.20110803-cvs.tar.xz`](src) (SHA-256
-`b8bfa5e5b0b42c50faa9164b092565e8ff3907f7eee465194f2a267b421979d6`), which is the source used to build the image:
+sourceware.org still serves through rsync (~900 MB download, needs `rsync` and `cvs`), and
+[`scripts/download_assets.sh`](scripts/download_assets.sh) runs it to download the sources into `assets/`, checking them
+against the pinned SHA-256 of their files, so the image is always built from the same sources:
 
 * The Windows binary reports GDB `7.3.50.20110803-cvs` and BFD `2.21.53.20110801`, and was linked on 2011-08-04 01:13
   UTC. Since both version strings were bumped daily at 00:00 UTC, `gdb/` (including the Insight GUI, `gdb/gdbtk`) is
@@ -61,24 +61,30 @@ Insight saves its preferences, sessions and breakpoints in `/home/insight/.gdbtk
 `/home/insight` to keep them.
 
 ## Build and installation
-The scripts in `scripts/` build and install Insight into `/URV/bmde/insight`, with its environment (`PATH`) in
-`/etc/profile.d/bmde-insight.sh`. The image is built with them, and they install it in an Ubuntu / Debian host too:
+`scripts/download_assets.sh` downloads the assets of the component into `assets/`: the sources of Insight, the tarball
+of Insight published in the releases and the project used by the tests (see
+[external resources](https://github.com/URV-teacher/bmde/blob/master/docs/development/external-resources.md) of bmde).
+Give it the names of the assets to download only those, e.g. a host only needs the tarball:
 
-* `build_insight.sh` builds Insight from `src/`. It needs Ubuntu 14.04, so it runs in the build stage of the Dockerfile,
-  which also packs the result into `insight-7.3.50.20110803-cvs-linux-x86_64.tar.xz`. That tarball is published in the
-  releases of this repository (by the CI, when a tag `v*` is pushed).
-* `install_insight.sh` installs the tarball (`INSIGHT_TARBALL`: a file or a URL; the latest release by default).
+```bash
+scripts/download_assets.sh insight-7.3.50.20110803-cvs-linux-x86_64.tar.xz
+```
+
+The scripts in `src/` build and install Insight into `/URV/bmde/insight`, with its environment (`PATH`) in
+`/etc/profile.d/bmde-insight.sh`, taking the files only from `src/` and `assets/`. The image is built with them, and
+they install it in an Ubuntu / Debian host too:
+
+* `build_insight.sh` builds Insight from the sources in `assets/`. It needs Ubuntu 14.04, so it runs in the build stage
+  of the Dockerfile, which also packs the result into `insight-7.3.50.20110803-cvs-linux-x86_64.tar.xz`.
+  That tarball is published in the releases of this repository (by the CI, when a tag `v*` is pushed).
+* `install_insight.sh` installs the tarball (`INSIGHT_TARBALL`: a file; the latest release in `assets/` by default).
 * `install_gdb_multiarch.sh` installs gdb-multiarch, and `install_wrapper.sh` the wrappers
   `$DEVKITPRO/insight/bin/arm-eabi-insight(.exe)` used by the Makefiles of the course.
 
-Test the installation with the `scripts/test_*.sh` scripts. To build the image:
+Test the installation with the `test/test_*.sh` scripts. To build the image (it needs the sources of Insight, ~900 MB
+from the CVS repository of sourceware.org):
 
 ```bash
+scripts/download_assets.sh insight-7.3.50.20110803-cvs.tar.xz
 docker build -t aleixmt/insight .
-```
-
-To regenerate the source tarball from the CVS repository of sourceware.org (downloads ~900 MB):
-
-```bash
-scripts/fetch_source.sh src/insight-7.3.50.20110803-cvs.tar.xz
 ```

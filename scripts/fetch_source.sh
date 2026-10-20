@@ -9,23 +9,36 @@
 # include (ppc64, mips, mach-o and i386 code, irrelevant for ARM), so those are taken from 2011-08-01 to reproduce
 # both version strings exactly.
 #
+# Used by download_assets.sh, which checks the result against the pinned SHA-256 of its files.
+#
 # Usage: [CVS_MIRROR=DIR] fetch_source.sh [OUTPUT_TARBALL]
 # Requires: rsync, cvs, tar, xz. Downloads ~900 MB of RCS files into CVS_MIRROR (a temporary directory by default),
 # so a mirror can be reused between runs.
 set -Eeuo pipefail
 
-OUTPUT="$(realpath -m "${1:-insight-7.3.50.20110803-cvs.tar.xz}")"
+OUTPUT="$(readlink -m "${1:-insight-7.3.50.20110803-cvs.tar.xz}")"
 GDB_DATE="2011-08-03 23:59:59 UTC"
 SUPPORT_DATE="2011-08-01 23:59:59 UTC"
 WORK_DIR="$(mktemp -d)"
 trap 'rm -rf "${WORK_DIR}"' EXIT
-MIRROR="$(realpath -m "${CVS_MIRROR:-${WORK_DIR}/cvsroot}")"
+MIRROR="$(readlink -m "${CVS_MIRROR:-${WORK_DIR}/cvsroot}")"
+
+# rsync with retries, since the download is big and every build depends on it. rsync resumes where it stopped
+retry_rsync() {
+  local attempt
+  for attempt in 1 2 3; do
+    rsync "$@" && return 0
+    echo "rsync failed (attempt ${attempt} of 3)" >&2
+    sleep 10
+  done
+  return 1
+}
 
 echo "Mirroring sourceware src CVS repository into ${MIRROR}"
 mkdir -p "${MIRROR}"
 # history is a huge (several GB) access log, not needed for checkouts
-rsync -a --exclude='history*' rsync://sourceware.org/src-cvs/CVSROOT/ "${MIRROR}/CVSROOT/"
-rsync -a \
+retry_rsync -a --exclude='history*' rsync://sourceware.org/src-cvs/CVSROOT/ "${MIRROR}/CVSROOT/"
+retry_rsync -a \
   --exclude='newlib/' --exclude='libgloss/' --exclude='gold/' --exclude='sid/' --exclude='cgen/' \
   --exclude='ld/' --exclude='gas/' --exclude='binutils/' --exclude='gprof/' --exclude='elfcpp/' \
   rsync://sourceware.org/src-cvs/src/ "${MIRROR}/src/"
@@ -48,7 +61,9 @@ grep -q 'BFD_VERSION_DATE 20110801' src/bfd/version.h
 
 find src -type d -name CVS -prune -exec rm -rf {} +
 mv src insight-7.3.50.20110803-cvs
+
 echo "Packing ${OUTPUT}"
-tar --sort=name --owner=0 --group=0 --numeric-owner --mtime="${GDB_DATE}" \
-  -cJf "${OUTPUT}" insight-7.3.50.20110803-cvs
+# Files sorted by name for a reproducible tarball (with a list, for versions of tar without --sort)
+find insight-7.3.50.20110803-cvs -print0 | LC_ALL=C sort -z \
+  | tar --null --no-recursion -T - --owner=0 --group=0 --numeric-owner --mtime="${GDB_DATE}" -cJf "${OUTPUT}"
 sha256sum "${OUTPUT}"

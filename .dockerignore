@@ -1,4 +1,4 @@
-# Only the source tarball, the entrypoint and the Tcl scripts are needed to build the image
+# Only src/ and assets/ are needed to build the image
 data/
 roms/
 logs/

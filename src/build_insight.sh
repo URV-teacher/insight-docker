@@ -1,34 +1,35 @@
 #!/usr/bin/env bash
 # Builds Insight 7.3.50.20110803-cvs (the version of the Windows BMDE) for the arm-eabi target into /URV/bmde/insight,
-# from the sources in src/ (see fetch_source.sh). The 2011 code needs a toolchain of its time: run it in Ubuntu 14.04,
-# as the Dockerfile does. The result does not depend on the libraries of Ubuntu 14.04 (ncurses is linked statically),
-# so it runs in newer systems: pack it with --tarball FILE and install it with install_insight.sh.
+# from its sources (in assets/, reconstructed from the CVS repository of sourceware.org by
+# scripts/download_assets.sh).
+# The 2011 code needs a toolchain of its time: run it in Ubuntu 14.04, as the Dockerfile does. The result does not
+# depend on the libraries of Ubuntu 14.04 (ncurses is linked statically), so it runs in newer systems: pack it with
+# --tarball FILE and install it with install_insight.sh.
 # Set BMDE_ROOT to build into another directory.
 set -Eeuo pipefail
 
 BMDE_ROOT="${BMDE_ROOT:-/URV/bmde}"
 SUDO=""; if [ "$(id -u)" -ne 0 ]; then SUDO=sudo; fi
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")" && pwd)"
-REPO_URL="https://raw.githubusercontent.com/URV-teacher/insight-docker/master"
 SOURCE=insight-7.3.50.20110803-cvs
+SOURCE_TARBALL="${SCRIPT_DIR}/../assets/${SOURCE}.tar.xz"
 INSIGHT_DIR="${BMDE_ROOT}/insight"
 TARBALL=""
 if [ "${1:-}" = "--tarball" ]; then
   TARBALL="$(readlink -m "$2")"
 fi
 
+if [ ! -f "${SOURCE_TARBALL}" ]; then
+  echo "${SOURCE_TARBALL} not found: download it with scripts/download_assets.sh" >&2
+  exit 1
+fi
+
 ${SUDO} apt-get update
 ${SUDO} apt-get install -y --no-install-recommends \
-  build-essential bison flex m4 texinfo libncurses5-dev libexpat1-dev zlib1g-dev libx11-dev xz-utils wget
+  build-essential bison flex m4 texinfo libncurses5-dev libexpat1-dev zlib1g-dev libx11-dev xz-utils
 
 build_dir="$(mktemp -d)"
-# Use the sources of the repository if the script is run from it, or download them otherwise
-if [ -f "${SCRIPT_DIR}/../src/${SOURCE}.tar.xz" ]; then
-  cp "${SCRIPT_DIR}/../src/${SOURCE}.tar.xz" "${build_dir}"
-else
-  wget -q "${REPO_URL}/src/${SOURCE}.tar.xz" -O "${build_dir}/${SOURCE}.tar.xz"
-fi
-tar -xJf "${build_dir}/${SOURCE}.tar.xz" -C "${build_dir}"
+tar -xJf "${SOURCE_TARBALL}" -C "${build_dir}"
 
 # Only the static ncurses libraries in the search path, so they are linked statically: newer systems lack ncurses 5
 # (also under the other names configure looks for: curses, termcap)
