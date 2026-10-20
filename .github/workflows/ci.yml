@@ -1,0 +1,51 @@
+# Builds and tests the image of the component, and installs and tests the component in an Ubuntu machine with the
+# install scripts. The jobs are the reusable workflows of the bmde repository, shared by all the components.
+name: CI
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  image:
+    uses: URV-teacher/bmde/.github/workflows/component-image.yml@master
+    with:
+      image: aleixmt/insight
+      tests: test_insight.sh test_arm_gdb.sh test_gdb_multiarch.sh
+    secrets: inherit
+
+  # Insight is installed from the tarball built by the image, as it would be from the release
+  host:
+    uses: URV-teacher/bmde/.github/workflows/component-host.yml@master
+    with:
+      setup: |
+        docker build -t insight .
+        docker run --rm --entrypoint cat insight \
+          /URV/bmde/insight/share/bmde/insight-7.3.50.20110803-cvs-linux-x86_64.tar.xz > /tmp/insight.tar.xz
+      env: INSIGHT_TARBALL=/tmp/insight.tar.xz
+      install: install_insight.sh install_gdb_multiarch.sh install_wrapper.sh
+      tests: test_insight.sh test_arm_gdb.sh test_gdb_multiarch.sh test_wrapper.sh
+
+  # Publishes the tarball of Insight, which install_insight.sh downloads by default, in the releases (on tags v*)
+  release:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: image
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Build tarball
+        run: |
+          docker build -t insight .
+          docker run --rm --entrypoint cat insight \
+            /URV/bmde/insight/share/bmde/insight-7.3.50.20110803-cvs-linux-x86_64.tar.xz \
+            > insight-7.3.50.20110803-cvs-linux-x86_64.tar.xz
+
+      - name: Publish release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "${GITHUB_REF_NAME}" insight-7.3.50.20110803-cvs-linux-x86_64.tar.xz --generate-notes

@@ -24,8 +24,8 @@ sourceware.org still serves through rsync, and packs it into
 * The only patch of devkitPro for GDB in those years changed how dependencies are tracked when building with MinGW, so
   the sources are built without patches.
 
-The 2011 code is built with the toolchain of Ubuntu 14.04 (GCC 4.8), which builds it without patches, and runs on
-Ubuntu 22.04.
+The 2011 code is built with the toolchain of Ubuntu 14.04 (GCC 4.8), which builds it without patches, with ncurses
+linked statically (current distributions lack ncurses 5), so the result runs on current distributions.
 
 ## Usage
 Mount the project to debug (the folder with the `.elf`) as working directory, in the same path where it was built so the
@@ -60,7 +60,19 @@ the first `.elf` of the working directory is used.
 Insight saves its preferences, sessions and breakpoints in `/home/insight/.gdbtkinit`; mount a volume in
 `/home/insight` to keep them.
 
-## Build
+## Build and installation
+The scripts in `scripts/` build and install Insight into `/URV/bmde/insight`, with its environment (`PATH`) in
+`/etc/profile.d/bmde-insight.sh`. The image is built with them, and they install it in an Ubuntu / Debian host too:
+
+* `build_insight.sh` builds Insight from `src/`. It needs Ubuntu 14.04, so it runs in the build stage of the Dockerfile,
+  which also packs the result into `insight-7.3.50.20110803-cvs-linux-x86_64.tar.xz`. That tarball is published in the
+  releases of this repository (by the CI, when a tag `v*` is pushed).
+* `install_insight.sh` installs the tarball (`INSIGHT_TARBALL`: a file or a URL; the latest release by default).
+* `install_gdb_multiarch.sh` installs gdb-multiarch, and `install_wrapper.sh` the wrappers
+  `$DEVKITPRO/insight/bin/arm-eabi-insight(.exe)` used by the Makefiles of the course.
+
+Test the installation with the `scripts/test_*.sh` scripts. To build the image:
+
 ```bash
 docker build -t aleixmt/insight .
 ```
