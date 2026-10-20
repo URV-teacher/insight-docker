@@ -111,10 +111,6 @@ checksum() {
 # as a tarball, so it is reconstructed from the CVS history of sourceware.org (needs rsync and cvs)
 asset insight-7.3.50.20110803-cvs.tar.xz 1ce1b5ef3c254e0e28bc7d5ec32d1423a0a50c806c5439e04036ebecdc28c6fb \
   function:fetch_insight_source
-# Insight already built, published in the releases of insight-docker, installed in hosts (latest version)
-INSIGHT_RELEASES_URL="https://github.com/URV-teacher/insight-docker/releases/latest/download"
-asset insight-7.3.50.20110803-cvs-linux-x86_64.tar.xz "" \
-  "${INSIGHT_RELEASES_URL}/insight-7.3.50.20110803-cvs-linux-x86_64.tar.xz"
 # Hello world project of the course, built and debugged by test_operation.sh (latest version)
 asset hello-world-nds.tar.gz "" "https://github.com/URV-teacher/hello-world-nds/archive/refs/heads/master.tar.gz"
 

@@ -1,5 +1,6 @@
 # Only src/ and assets/ are needed to build the image
 data/
+build/
 roms/
 logs/
 .git

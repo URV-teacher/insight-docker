@@ -4,8 +4,8 @@
 # host from a checkout of the repository (after scripts/download_assets.sh), and is also used by the BMDE Docker
 # images. Set BMDE_ROOT to install into another directory.
 #
-# Insight is installed from the tarball built by build_insight.sh, given in INSIGHT_TARBALL (by default the one
-# published in the releases of insight-docker, in assets/). Also installs the script that connects the Run button of
+# Insight is installed from the tarball built by build_insight.sh, given in INSIGHT_TARBALL (by default the one built
+# by scripts/build_tarball.sh, in build/). Also installs the script that connects the Run button of
 # Insight to the GDB stub in GDB_TARGET (used by the Docker image).
 set -Eeuo pipefail
 
@@ -13,14 +13,14 @@ BMDE_ROOT="${BMDE_ROOT:-/URV/bmde}"
 SUDO=""; if [ "$(id -u)" -ne 0 ]; then SUDO=sudo; fi
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")" && pwd)"
 INSIGHT_DIR="${BMDE_ROOT}/insight"
-INSIGHT_TARBALL="${INSIGHT_TARBALL:-${SCRIPT_DIR}/../assets/insight-7.3.50.20110803-cvs-linux-x86_64.tar.xz}"
+INSIGHT_TARBALL="${INSIGHT_TARBALL:-${SCRIPT_DIR}/../build/insight-7.3.50.20110803-cvs-linux-x86_64.tar.xz}"
 
 ${SUDO} apt-get update
 ${SUDO} apt-get install -y --no-install-recommends xz-utils libx11-6 libexpat1 zlib1g
 
 if [ ! -x "${INSIGHT_DIR}/bin/arm-eabi-insight" ]; then
   if [ ! -f "${INSIGHT_TARBALL}" ]; then
-    echo "${INSIGHT_TARBALL} not found: download it with scripts/download_assets.sh" >&2
+    echo "${INSIGHT_TARBALL} not found: build it with scripts/build_tarball.sh" >&2
     exit 1
   fi
   ${SUDO} mkdir -p "${BMDE_ROOT}"

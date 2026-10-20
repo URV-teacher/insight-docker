@@ -3,7 +3,7 @@
 # into assets/ by scripts/download_assets.sh), the same ones used to install them in a host (see README.md).
 
 # STAGE 1: Build, from the sources in assets/. The 2011 code needs a toolchain of its time; the result runs in newer
-# systems. The tarball is the one published in the releases, used by install_insight.sh in hosts
+# systems. scripts/build_tarball.sh copies the tarball out of this stage, to install it in hosts with install_insight.sh
 # Base image of the BMDE images (docker-bake.hcl of bmde replaces this stage by the base image being built)
 FROM aleixmt/bmde-base:latest AS bmde-base
 

@@ -210,3 +210,6 @@ data/Mastermind
 
 # Assets downloaded by scripts/download_assets.sh
 assets/
+
+# Tarball of Insight built by scripts/build_tarball.sh
+build/

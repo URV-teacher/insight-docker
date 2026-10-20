@@ -61,30 +61,36 @@ Insight saves its preferences, sessions and breakpoints in `/home/insight/.gdbtk
 `/home/insight` to keep them.
 
 ## Build and installation
-`scripts/download_assets.sh` downloads the assets of the component into `assets/`: the sources of Insight, the tarball
-of Insight published in the releases and the project used by the tests (see
+`scripts/download_assets.sh` downloads the assets of the component into `assets/`: the sources of Insight (~900 MB from
+the CVS repository of sourceware.org, with `rsync` and `cvs`) and the project used by the tests (see
 [external resources](https://github.com/URV-teacher/bmde/blob/master/docs/development/external-resources.md) of bmde).
-Give it the names of the assets to download only those, e.g. a host only needs the tarball:
-
-```bash
-scripts/download_assets.sh insight-7.3.50.20110803-cvs-linux-x86_64.tar.xz
-```
 
 The scripts in `src/` build and install Insight into `/URV/bmde/insight`, with its environment (`PATH`) in
-`/etc/profile.d/bmde-insight.sh`, taking the files only from `src/` and `assets/`. The image is built with them, and
-they install it in an Ubuntu / Debian host too:
+`/etc/profile.d/bmde-insight.sh`, taking the files only from the repository. The image is built with them, and they
+install it in an Ubuntu / Debian host too:
 
 * `build_insight.sh` builds Insight from the sources in `assets/`. It needs Ubuntu 14.04, so it runs in the build stage
   of the Dockerfile, which also packs the result into `insight-7.3.50.20110803-cvs-linux-x86_64.tar.xz`.
-  That tarball is published in the releases of this repository (by the CI, when a tag `v*` is pushed).
-* `install_insight.sh` installs the tarball (`INSIGHT_TARBALL`: a file; the latest release in `assets/` by default).
+* `install_insight.sh` installs that tarball (`INSIGHT_TARBALL`; by default the one in `build/`).
 * `install_gdb_multiarch.sh` installs gdb-multiarch, and `install_wrapper.sh` the wrappers
   `$DEVKITPRO/insight/bin/arm-eabi-insight(.exe)` used by the Makefiles of the course.
 
-Test the installation with the `test/test_*.sh` scripts. To build the image (it needs the sources of Insight, ~900 MB
-from the CVS repository of sourceware.org):
+To build the image:
 
 ```bash
-scripts/download_assets.sh insight-7.3.50.20110803-cvs.tar.xz
+scripts/download_assets.sh
 docker build -t aleixmt/insight .
 ```
+
+To install Insight in a host, build the tarball with the build stage of the image (`scripts/build_tarball.sh`, which
+needs Docker) and install it:
+
+```bash
+scripts/download_assets.sh
+scripts/build_tarball.sh      # build/insight-7.3.50.20110803-cvs-linux-x86_64.tar.xz
+src/install_insight.sh
+src/install_gdb_multiarch.sh
+src/install_wrapper.sh
+```
+
+Test the installation with the `test/test_*.sh` scripts.
