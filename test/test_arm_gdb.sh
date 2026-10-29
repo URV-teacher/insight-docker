@@ -4,3 +4,4 @@ set -Eeuo pipefail
 
 arm-eabi-gdb --version | head -n 1
 arm-eabi-gdb -batch -ex "show architecture" | grep -q "arm"
+echo "arm-eabi-gdb OK"

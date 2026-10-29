@@ -5,3 +5,4 @@ set -Eeuo pipefail
 for wrapper in arm-eabi-insight arm-eabi-insight.exe; do
   "${DEVKITPRO:-/URV/bmde/devkitPro}/insight/bin/${wrapper}" --version | head -n 1
 done
+echo "Insight wrappers OK"
