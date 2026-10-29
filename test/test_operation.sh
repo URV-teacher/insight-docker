@@ -29,4 +29,5 @@ for gdb in arm-eabi-gdb gdb-multiarch; do
   wait "${desmume_pid}" 2>/dev/null || true
 done
 rm -rf "${work_dir}"
-exit "${status}"
+[ "${status}" -eq 0 ]
+echo "debug operation OK"
