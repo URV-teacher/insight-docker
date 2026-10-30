@@ -22,9 +22,12 @@ jobs:
   host:
     uses: URV-teacher/bmde/.github/workflows/component-host.yml@master
     with:
-      # The sources of Insight are reconstructed from the CVS repository of sourceware.org
-      setup: sudo apt-get update && sudo apt-get install -y --no-install-recommends cvs rsync
-      assets: insight-7.3.50.20110803-cvs.tar.xz
+      # The sources of Insight are reconstructed from the CVS repository of sourceware.org. test_operation.sh builds the
+      # project that it debugs in DeSmuME, with devkitARM and libnds, installed as a student does
+      setup: |
+        sudo apt-get update && sudo apt-get install -y --no-install-recommends cvs rsync
+        curl -fsSL https://raw.githubusercontent.com/URV-teacher/bmde/master/scripts/install.sh | bash -s -- devkitarm desmume
+      assets: insight-7.3.50.20110803-cvs.tar.xz hello-world-nds.tar.gz
       prepare: scripts/build_tarball.sh
       install: install_insight.sh install_gdb_multiarch.sh install_wrapper.sh
-      tests: test_insight.sh test_arm_gdb.sh test_gdb_multiarch.sh test_wrapper.sh
+      tests: test_insight.sh test_arm_gdb.sh test_gdb_multiarch.sh test_wrapper.sh test_operation.sh
